@@ -1,224 +1,110 @@
-# 🪟 Panduan Instalasi OpenHands di Windows 11 (Python Direct)
+# 🪟 Panduan Instalasi OpenHands di Windows 11
 
-Panduan ini akan membantu Anda setup OpenHands di Windows 11 tanpa Docker.
+> ⚠️ **PERHATIAN PENTING**: OpenHands membutuhkan **Docker Desktop** atau **WSL2** untuk berjalan di Windows karena memiliki dependency Unix-specific (`fcntl` module).
 
-## Prasyarat
+## Pilihan Setup
 
-- Windows 11 (64-bit)
-- Minimum 8GB RAM (disarankan 16GB)
-- Minimal 10GB free disk space
+| Metode | Tingkat Kesulitan | Rekomendasi |
+|--------|------------------|-------------|
+| 🐳 **Docker Desktop** | ⭐ Mudah | ✅ **Disarankan** |
+| 🐧 **WSL2** | ⭐⭐ Medium | Alternatif baik |
 
 ---
 
-## Step 1: Install Python
+## ✅ Opsi A: Docker Desktop (⭐ Disarankan)
 
-### Cara 1: Microsoft Store (⭐ Disarankan untuk Pemula)
+### Step 1: Install Docker Desktop
 
-1. Buka **Microsoft Store**
-2. Cari **"Python 3.11"** atau **"Python 3.12"**
-3. Klik **Install**
-4. Pastikan centang **"Add Python to PATH"**
+1. Download dari https://www.docker.com/products/docker-desktop/
+2. Run installer
+3. Restart komputer
+4. Buka **Docker Desktop** (pastikan icon hijau muncul di system tray)
 
-### Cara 2: Download Manual
+### Step 2: Clone Repository
 
-1. Kunjungi https://www.python.org/downloads/windows/
-2. Download installer **Python 3.11** atau **3.12**
-3. Run installer
-4. **PENTING**: Centang **"Add Python to PATH"** di bawah
-5. Klik **"Install Now"**
-
-### Verifikasi Python
-
-Buka **Command Prompt** atau **PowerShell**, ketik:
-
-```bash
-python --version
+```powershell
+git clone https://github.com/antono4/social-media-agent.git
+cd social-media-agent
 ```
 
-Seharusnya muncul: `Python 3.11.x` atau `Python 3.12.x`
+### Step 3: Setup Agent Folder
 
----
+```powershell
+# Buat folder agents
+New-Item -ItemType Directory -Path "$env:USERPROFILE\.openhands\agents" -Force
 
-## Step 2: Install Git
-
-Git diperlukan untuk clone repository dan management.
-
-1. Download dari https://git-scm.com/download/win
-2. Run installer dengan setting default
-3. Verifikasi dengan command:
-
-```bash
-git --version
+# Copy agent file
+Copy-Item "agents\social-media-content-creator.md" "$env:USERPROFILE\.openhands\agents\"
 ```
 
----
+### Step 4: Setup API Key
 
-## Step 3: Clone OpenHands Repository
-
-Buka **PowerShell** atau **Command Prompt**, jalankan:
-
-```bash
-# Clone repository
-git clone https://github.com/All-Hands-AI/OpenHands.git
-
-# Masuk ke folder
-cd OpenHands
-```
-
----
-
-## Step 4: Setup Virtual Environment (Disarankan)
-
-```bash
-# Buat virtual environment
-python -m venv venv
-
-# Aktifkan virtual environment
-.\venv\Scripts\activate
-
-# Upgrade pip
-pip install --upgrade pip
-```
-
----
-
-## Step 5: Install Dependencies
-
-```bash
-# Install OpenHands dengan semua dependencies
-pip install openhands
-
-# Atau jika ingin install dari source
-pip install -e .
-```
-
----
-
-## Step 6: Setup API Key
-
-OpenHands membutuhkan LLM API key. Pilihan:
-
-### Opsi A: OpenHands Cloud (⭐ Termudah)
 1. Buka https://app.all-hands.dev/settings/api-keys
 2. Buat API key baru
 3. Set environment variable:
 
-```bash
-setx OPENHANDS_API_KEY "your-api-key-here"
+```powershell
+$env:OPENHANDS_API_KEY = "your-api-key-here"
 ```
 
-### Opsi B: Provider Lain (OpenAI, Anthropic, dll)
+### Step 5: Jalankan dengan Docker
 
-```bash
-# OpenAI
-setx OPENAI_API_KEY "sk-your-key-here"
-
-# Anthropic
-setx ANTHROPIC_API_KEY "sk-ant-your-key-here"
-```
-
-**Catatan**: `setx` akan persisten. Tutup dan buka terminal baru setelahnya.
-
----
-
-## Step 7: Buat Folder Agent
-
-Copy file agent ke folder user-level:
-
-```bash
-# Buat folder agents (jika belum ada)
-mkdir %USERPROFILE%\.openhands\agents
-
-# Copy agent file
-copy agents\social-media-content-creator.md %USERPROFILE%\.openhands\agents\
+```powershell
+docker run -it `
+  -v "$env:USERPROFILE\.openhands:/root/.openhands" `
+  -e OPENHANDS_API_KEY="your-api-key-here" `
+  allhandshub/openhands:latest
 ```
 
 ---
 
-## Step 8: Jalankan OpenHands
+## ✅ Opsi B: WSL2 (Windows Subsystem for Linux)
 
-### Mode Interaktif (CLI)
+### Step 1: Enable WSL2
+
+Buka **PowerShell as Administrator**, jalankan:
+
+```powershell
+wsl --install
+```
+
+Restart komputer.
+
+### Step 2: Setup di WSL
+
+Buka **Ubuntu** (dari Start Menu), jalankan:
 
 ```bash
-openhands
-```
+# Update sistem
+sudo apt update && sudo apt upgrade -y
 
-### Mode Headless (untuk automasi)
+# Install Python
+sudo apt install python3 python3-pip python3-venv git -y
 
-```bash
-openhands --headless
-```
+# Clone repository
+git clone https://github.com/antono4/social-media-agent.git
+cd social-media-agent
 
-### Dengan model spesifik
+# Setup virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-```bash
-setx LLM_MODEL "anthropic/claude-sonnet-4-5-20250929"
-openhands
-```
-
----
-
-## Step 9: Verifikasi Agent Terdaftar
-
-Setelah OpenHands berjalan, ketik:
-
-```
-Load the social-media-content-creator agent
-```
-
-Agent akan aktif dan siap digunakan!
-
----
-
-## Troubleshooting
-
-### Error: "Python is not recognized"
-
-1. Buka **System Properties** → **Environment Variables**
-2. Edit **PATH**, tambahkan:
-   - `C:\Users\YourUsername\AppData\Local\Programs\Python\Python311\`
-   - `C:\Users\YourUsername\AppData\Local\Programs\Python\Python311\Scripts\`
-
-### Error: "Permission denied" saat install
-
-Jalankan PowerShell sebagai Administrator.
-
-### Error: SSL/TLS certificates
-
-```bash
-pip install --upgrade certifi
-```
-
-### Virtual environment tidak activate
-
-```bash
-# Pastikan Execution Policy允许
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-
-# Aktifkan ulang
-.\venv\Scripts\activate
-```
-
----
-
-## Quick Command Reference
-
-```bash
-# Clone & Setup
-git clone https://github.com/All-Hands-AI/OpenHands.git
-cd OpenHands
-
-# Setup environment
-python -m venv venv
-.\venv\Scripts\activate
+# Install OpenHands
 pip install openhands
 
-# Set API Key (ganti dengan key Anda)
-setx OPENHANDS_API_KEY "your-api-key-here"
+# Setup API Key
+export OPENHANDS_API_KEY="your-api-key-here"
 
-# Copy agent
-mkdir %USERPROFILE%\.openhands\agents
-copy agents\social-media-content-creator.md %USERPROFILE%\.openhands\agents\
+# Setup agent folder
+mkdir -p ~/.openhands/agents
+cp agents/social-media-content-creator.md ~/.openhands/agents/
+```
+
+### Step 3: Jalankan OpenHands
+
+```bash
+# Aktifkan environment (jika belum)
+source venv/bin/activate
 
 # Jalankan
 openhands
@@ -226,31 +112,66 @@ openhands
 
 ---
 
-## Struktur Folder Akhir
+## 📋 Checklist Setup
+
+- [ ] Docker Desktop terinstall & running **ATAU** WSL2 terinstall
+- [ ] Repository sudah di-clone
+- [ ] API Key sudah diset
+- [ ] Agent file sudah di-copy ke `~/.openhands/agents/`
+- [ ] OpenHands berhasil dijalankan
+
+---
+
+## 🔧 Troubleshooting
+
+### Docker Error: "docker daemon is not running"
+
+1. Buka **Docker Desktop**
+2. Tunggu sampai icon hijau muncul
+3. Atau restart Docker service: `Restart-Service com.docker.Service`
+
+### WSL Error: "WSL is not installed"
+
+```powershell
+# Buka PowerShell as Admin
+wsl --install -d Ubuntu
+```
+
+### Error: "ModuleNotFoundError: No module named 'fcntl'"
+
+✅ **Normal untuk Python direct install** - Gunakan Docker atau WSL2 sebagai gantinya.
+
+---
+
+## 🚀 Quick Start (Setelah Setup)
+
+1. Buka Docker Desktop **ATAU** Ubuntu (WSL)
+2. Jalankan OpenHands
+3. Ketik request Anda:
 
 ```
-%USERPROFILE%\.openhands\
-└── agents\
-    └── social-media-content-creator.md  ← Agent Anda
+Load the social-media-content-creator agent
 ```
 
 ---
 
-## Tips & Best Practices
+## 📚 Struktur Folder
 
-1. **Selalu gunakan virtual environment** - Menghindari conflict antar project
-2. **Restart terminal** setelah set environment variables
-3. **Update regularly** - Jalankan `pip install --upgrade openhands` secara berkala
-4. **Backup API keys** - Simpan di tempat aman
+```
+%USERPROFILE%\.openhands\  (Windows)
+~/.openhands/               (WSL/Linux)
+└── agents\
+    └── social-media-content-creator.md
+```
 
 ---
 
 ## Butuh Bantuan?
 
-- 📖 Dokumentasi: https://docs.openhands.dev/
-- 💬 GitHub Issues: https://github.com/All-Hands-AI/OpenHands/issues
-- 📝 Dokumentasi Agent: https://docs.openhands.dev/sdk/guides/agent-file-based
+- 📖 Dokumentasi Resmi: https://docs.openhands.dev/
+- 🐳 Docker Docs: https://docs.docker.com/
+- 🐧 WSL Docs: https://docs.microsoft.com/en-us/windows/wsl/
 
 ---
 
-*Panduan ini dibuat untuk Windows 11 dengan Python direct install. Untuk setup dengan Docker atau WSL2, lihat dokumentasi resmi OpenHands.*
+*Updated: Python direct install TIDAK didukung karena OpenHands membutuhkan modul Unix. Gunakan Docker atau WSL2.*
